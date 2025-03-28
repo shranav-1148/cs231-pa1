@@ -125,7 +125,7 @@ fill:
         LSL X10, X17, #3 // tmp = X17 * 8
 
         ADD X10, X0, X10 // tmp = & a[X10]
-        LDUR X20, [X10, #0] // val = & a[X10]
+        LDUR X20, [X10, #0] // val =  a[X10]
         ADD X20, X16, XZR // val = i * 2
         STUR X20, [X10, #0] // a[((s + 1) / 2) + i] = val;
 
@@ -138,10 +138,16 @@ fill:
 
         ANDIS XZR, X1, #1 // if (s && 1)
         B.EQ end // skip to end
-        ADD X10, XZR, XZR // tmp = 0
-        
 
+        ADD X17, XZR, XZR // X17 = 0
+        LSL X10, X17, #3 // tmp = X17 * 8
+
+        ADD X10, X0, X10 // tmp = & a[0]
+        LDUR X20, [X10, #0] // val = a[0]
+        SUBI X20, X1, #1 // val = s - 1
+        STUR X20, [X10, #0] // a[0] = val
     end:
+    BR LR
 
 
 
