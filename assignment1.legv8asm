@@ -103,7 +103,7 @@ fill:
 
     loop:
         SUBI X10, X9, X11 // tmp = i - s/2
-        CBZ X10, loop_end // if (i == s/2) break
+        CBZ X10, skip // if (i == s/2) break
 
         //need:
         //i+1, i*2, i*2+1,
@@ -129,16 +129,19 @@ fill:
         ADD X20, X16, XZR // val = i * 2
         STUR X20, [X10, #0] // a[((s + 1) / 2) + i] = val;
 
-
+        
         ADDI X9, X9, #1 // i++
+        B loop // unconditionally branch to loop
 
-    loop_end:
-
-
-
-
-
+    
     skip:
+
+        ANDIS XZR, X1, #1 // if (s && 1)
+        B.EQ end // skip to end
+        ADD X10, XZR, XZR // tmp = 0
+        
+
+    end:
 
 
 
