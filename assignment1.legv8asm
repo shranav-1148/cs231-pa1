@@ -1,5 +1,31 @@
-// Name: Shranav Sakha, Ashwin Shrestha
-// netID: shranav8, ash78
+// Group: Shranav Sakha shranav8, Ashwin Shrestha ash78
+
+main:
+    ADD X0, XZR, XZR 
+    ADDI X1, XZR, #100
+
+    SUBI SP, SP, #16
+	STUR X0, [SP, #0]
+	STUR X1, [SP, #8]
+
+	BL fill
+
+    LDUR X1, [SP, #8]
+	LDUR X0, [SP, #0]
+
+    BL heapsort
+
+    ADDI X9, XZR, XZR //i = 0
+    m_loop:
+        SUBS 10, X1, X9 // SIZE - i
+        CBZ X10, m_loop_end
+
+    DUMP
+    HALT
+
+
+
+
 
 
 //X0 = *a , X1 = s
@@ -93,6 +119,7 @@ swap:
 heapify:
     SUBI SP, SP, #8 // Allocate Space on stack
     STUR LR, [SP, #0] // Save Link Register
+    
 
     ADD X9, XZR, XZR // i = 0
 
@@ -123,6 +150,101 @@ heapify:
     BR LR
         
 
+
+// X0 = address of array a, X1 = s number of elements in a
 heapsort:
+    SUBI SP, SP, #8 // Allocate Space on stack
+    STUR LR, [SP, #0] // Save Link Register
+    
+    ADD X14, X0, XZR // Saving X0 and X1
+    ADD X15, X1, XZR 
+
+    
+
+    ADDI, X9, XZR, #1 // i = 1
+    BL heapify
+
+    //need: s - i, a[0] , a[s - i]
+
+    s_loop:
+        SUBS X10, X15, X9 // X10 = s - i
+        CBZ X10, s_loop_end
+
+        ADD X11, X14, XZR // X11 = & a[0]
+        
+
+        LSL X12, X10, #3 // tmp = (s - i) * 8
+        ADD X12, X14, X12 // X12 = & a[s-i]
+        
+        ADD X0, X11, XZR // Move registers to be passed as parameters
+        ADD X1, X12, XZR
+
+        BL swap
+
+        ADD X0, X14, XZR // Restore X0
+        ADD X1, X10, XZR // X1 = s - i
+        ADD X2, XZR, XZR // X2 = 0
+
+        Bl percolate_down
+
+        ADDI X9, X9, #1 // i++
+    
+    s_loop_end:
+
+    LDUR LR, [SP, #0] // Restore Link register
+    ADDI SP, SP, #8 // Restore Stack Pointer
+    BR LR // return to caller
+
+        
+        
+       
+
+
+//X19 = a, X20 = s, X21 = i, X9 = child
+percolate_down:
+    
+
+
+   ADD X9, XZR, XZR // child = 0 
+loop:
+   LSL X9, X21, #1  // X9 = 2 * i
+   ADDI X9, X9, #1  // X9 = (2 * i) + 1
+   SUBS X10, X9, X20  // child - s, checking if child < s
+   B.GE end_loop // if child >= s, end the loop as (child < s is false)
+
+   ADDI X11, X9, #1  // X11 = child + 1
+   SUBS X12, X11, X20   // checking if child + 1 < s
+   B.GE check_for_swap  // branch to next condition if child + 1 >= s
+
+
+    
+   LDUR X13, [X19, X9, LSL #3] // a[child]
+   LDUR X14, [X19, X5, LSL #3] // a[child + 1]
+   SUBS X15, X13, X14  // a[child] - a[child + 1]
+   B.GE check_for_swap  //branch to next condition if a[child] >= a[child + 1]
+
+   ADDI X9, X9, #1 // child ++  (could also use X5)
+
+check_for_swap:
+   LDUR X13, [X19, X21, LSL #3]  // a[i]
+   LDUR X14, [X19, X9, LSL #3]  // a[child]
+   SUBS X15, X13, X14 // a[i] - a[child]
+   
+   ADD X0, X19, X21 // a + i
+   ADD X1, X19, X9 // a + child 
+
+   B.GE loop // if a[i] >= a[child]
+
+   B swap  // swap with X0 and X1
+
+   ADD X21, X9, XZR  // i = child
+
+   B loop  // return back to repeat again
+
+end_loop:
+   BR LR
+
+
+
 
     
