@@ -1,96 +1,18 @@
-// Name: Shranav Sakha
-// netID: shranav8
-
-// Main Procedure
-
-
-//ADDI X1, X1, #6
-//ADDI X27, X27, #8 // An integer takes 8 Bytes
-//MUL X26, X1, X27  // For an array we need to allocate 8 bytes * number of elements
-
-
-//SUB X28, X28, X26 // Allocating space for the number of registers we intend to use
-
-
-//STUR X19, [X28, #0]
-//STUR X20, [X28, #8]
-//STUR X21, [X28, #16]
-//STUR X22, [X28, #24]
-//STUR X23, [X28, #32]
-//STUR X24, [X28, #40]
-//LDUR X0, [X28, #0]
-
-//BL fill
-
-//PRNT X19
-//PRNT X20
-//PRNT X21
-//PRNT X22
-//PRNT X23
-//PRNT X24
-
-
-
-
-
-
-
-
-
-// fill Procedure
-// NEEDS TESTING
-//X0 = array a, X1 = Size of array s
-
-//fill:   
-//ADDI X9, X9, #0 //X9 = i 
-
-//SUBIS XZR, X1, #2 // Sets flag on XZR from X1 - 2
-//B.LT loop_end // Jump to end of loop
-
-//ADDI X10, X1, #1
-//LSR X10, X10, #1 // X11 = (s + 1)/2
-//LSR X11, X1, #1 // X10 = s/2
-
-
-//loop:
-
-//SUBS XZR, X9, X11 // check if i >= s/2
-//B.GE loop_end
-
-//LSL X12, X9, #1 // X12 = i * 2
-
-//SUB X13, X10, X9 // X13 = (s+1)/2 - i 
-//SUBI X13, X13, #1 // X13 = X13 - 1
-//LSL X13, X13, #3
-//PRNT X13
-//STUR X12, [X0, X13] // a[((s + 1) / 2) - (i + 1)] = i * 2
-
-//ADDI X14, X12, #1 // i * 2 + 1
-//ADD X15, X10, X9 // (s+1/2) + i 
-//LSL X15, X15, #3 // Convert integer to byte offset
-//PRNT X15
-//STUR X14, [X0, X15] // a[(s+1/2)+i] = i*2+1 
-
-//ADDI X9, X9, #1 // i++
-//B loop 
-
-//loop_end:
-//ANDIS X16, X1, #1 // check if (s & 1)
-//B.EQ endFill // if even skip
-
-//SUBI X17, X1, #1 // X17 = s-1
-//STUR X17, [X0, #0] // a[0] = s - 1
-
-//endFill:
-//BR LR
+// Name: Shranav Sakha, Ashwin Shrestha
+// netID: shranav8, ash78
 
 
 //X0 = *a , X1 = s
 fill:
+
+    SUBI X28, X28, #16  // allocate space for registers
+    STUR X19, [SP, #0] // saving register X19
+    STUR X20, [SP, #8] // saving register X20
+
+
     ADD X9, XZR, XZR // i = 0
 
-    //Need:
-    // s-2, s/2, s+1, (s+1)/2
+    
     LSR X11, X1, #1 // X11 = s/2
     ADDI X12, X1, #1 // X12 = s + 1
     LSR X13, X12, #1 // X13 = (s+1)/2
@@ -101,19 +23,18 @@ fill:
 
 
 
-    loop:
+    f_loop:
         SUBI X10, X9, X11 // tmp = i - s/2
         CBZ X10, skip // if (i == s/2) break
 
-        //need:
-        //i+1, i*2, i*2+1,
+        
         ADDI X14, X9, #1 // X14 = i + 1
         LSL X15, X9, #1// X15 = i * 2
         ADDI X16, X15, #1 // X16 = i * 2 + 1
 
         //((s + 1) / 2) - (i + 1)
-        SUB X17, X13, X14
-        LSL X10, X17, #3 // tmp = X17 * 8
+        SUB X19, X13, X14
+        LSL X10, X19, #3 // tmp = X19 * 8
 
         ADD X10, X0, X10 // tmp = & a[X10]
         LDUR X20, [X10, #0] // val = a[X10]
@@ -121,8 +42,8 @@ fill:
         STUR X20, [X10, #0] // a[((s + 1) / 2) - (i + 1)] = val;
 
         // ((s + 1) / 2) + i
-        ADD X17, X13, X9
-        LSL X10, X17, #3 // tmp = X17 * 8
+        ADD X19, X13, X9
+        LSL X10, X19, #3 // tmp = X19 * 8
 
         ADD X10, X0, X10 // tmp = & a[X10]
         LDUR X20, [X10, #0] // val =  a[X10]
@@ -131,22 +52,27 @@ fill:
 
         
         ADDI X9, X9, #1 // i++
-        B loop // unconditionally branch to loop
+        B f_loop // unconditionally branch to loop
 
     
     skip:
 
-        ANDIS XZR, X1, #1 // if (s && 1)
+        ANDIS X10, X1, #1 // if (s && 1)
         B.EQ end // skip to end
 
-        ADD X17, XZR, XZR // X17 = 0
-        LSL X10, X17, #3 // tmp = X17 * 8
+        ADD X19, XZR, XZR // X19 = 0
+        LSL X10, X19, #3 // tmp = X19 * 8
 
         ADD X10, X0, X10 // tmp = & a[0]
         LDUR X20, [X10, #0] // val = a[0]
         SUBI X20, X1, #1 // val = s - 1
         STUR X20, [X10, #0] // a[0] = val
-    end:
+end:
+
+
+    LDUR X20, [SP, #8] // Restore registers
+    LDUR X19, [SP, #0] 
+    ADDI SP, SP, #16 // Restore stack
     BR LR
 
 
@@ -160,3 +86,43 @@ swap:
     LDUR X12, [X1, #0]  // Load value of *b in X12
     STUR X12 [X0, #0] // Store Value of X12 in *a
     STUR X11 [X1, #0]  // Store value of X11 in *b
+
+
+
+// X0 = address of array a, X1 = s number of elements in a
+heapify:
+    SUBI SP, SP, #8 // Allocate Space on stack
+    STUR LR, [SP, #0] // Save Link Register
+
+    ADD X9, XZR, XZR // i = 0
+
+    // Need : (s+1)/2
+    ADDI X10, X1, #1 // X10 = s + 1
+    LSR X10, X10, #1 // X10 = X10 / 2
+
+    ADD X9, X9, X10 // i = (s+1)/2
+    h_loop:
+        SUBS X10, X9, XZR // Check if (s+1)/2 - i, where i is its initial value = 0
+        CBZ X10, h_loop_end // if ((s+1)/2 - i == 0) break 
+
+        ADD X3, XZR, X9 // Put i as the third parameter to be passed to percolate_down
+        BL percolate_down
+
+        SUBI X9, X9, #1 // i--
+
+        B h_loop // unconditionally branch to h_loop
+    
+    h_loop_end:
+
+    ADD X3, XZR, XZR // set the third parameter register 0
+    BL percolate_down
+
+    LDUR LR, [SP, #0] // Restore Link Register
+    ADDI SP, SP, #8 // Restore Stack Pointer
+
+    BR LR
+        
+
+heapsort:
+
+    
