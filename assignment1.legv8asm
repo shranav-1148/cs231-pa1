@@ -258,7 +258,7 @@ check_for_swap:
     LDUR X14, [X23, #0]   // X14 = a[child]
     SUBS X15, X13, X14    // X15 = a[i] - a[child]
 
-    B.GE loop             // If a[i] >= a[child], continue the loop
+    B.GE end_loop             // If a[i] >= a[child], continue the loop
 
     B swap                // Swap a[i] and a[child]
 
