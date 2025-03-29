@@ -4,24 +4,30 @@ main:
     ADD X0, XZR, XZR 
     ADDI X1, XZR, #100
 
-    SUBI SP, SP, #16
-	STUR X0, [SP, #0]
-	STUR X1, [SP, #8]
+    SUBI SP, SP, #24
+    STUR LR, [Sp, #0]
+	STUR X0, [SP, #8]
+	STUR X1, [SP, #16]
 
 	BL fill
 
-    LDUR X1, [SP, #8]
-	LDUR X0, [SP, #0]
-
     BL heapsort
 
-    ADDI X9, XZR, XZR //i = 0
-    m_loop:
-        SUBS 10, X1, X9 // SIZE - i
-        CBZ X10, m_loop_end
+    LDUR X1, [SP, #16]
+    LDUR X0, [SP, #8]
+    LDUR LR, [SP, #0]
 
-    DUMP
-    HALT
+    ADDI SP, SP, #24
+
+    B end_program
+    
+
+    
+
+
+
+
+
 
 
 
@@ -202,7 +208,18 @@ heapsort:
 
 //X19 = a, X20 = s, X21 = i, X9 = child
 percolate_down:
-    
+    SUBI SP, SP, #48 // Allocating space for registers
+    STUR LR, [SP, #0] // Saving registers
+    STUR X19, [SP, #8]
+    STUR X20, [SP, #16]
+    STUR X21, [SP, #24]
+    STUR X22, [SP, #32]
+    STUR X23, [SP, #40]
+
+
+    ADD X19, X0, XZR // saving X0
+    ADD X20, X1, XZR // saving X1
+    ADD X21, X2, XZR // saving X2
 
 
    ADD X9, XZR, XZR // child = 0 
@@ -216,18 +233,29 @@ loop:
    SUBS X12, X11, X20   // checking if child + 1 < s
    B.GE check_for_swap  // branch to next condition if child + 1 >= s
 
+    LSL X22, X9, #3 // tmp = child * 8
+    ADD X22, X19, X22 // tmp = & a[child]
 
-    
-   LDUR X13, [X19, X9, LSL #3] // a[child]
-   LDUR X14, [X19, X5, LSL #3] // a[child + 1]
+    LSL X23, X11, #3 // tmp2 = (child + 1) * 8
+    ADD X23, X19, X23 // tmp = & a[child+1]
+
+   LDUR X13, [X22, #0] // a[child]
+   LDUR X14, [X23, #0] // a[child + 1]
    SUBS X15, X13, X14  // a[child] - a[child + 1]
    B.GE check_for_swap  //branch to next condition if a[child] >= a[child + 1]
 
    ADDI X9, X9, #1 // child ++  (could also use X5)
 
 check_for_swap:
-   LDUR X13, [X19, X21, LSL #3]  // a[i]
-   LDUR X14, [X19, X9, LSL #3]  // a[child]
+    LSL X22, X21, #3 // tmp = i * 8 
+    ADD X22, X19, X22 // tmp = & a[i]
+
+    LSL X23, X9, #3 // tmp2 = child * 8
+    ADD X23, X19, X23 // tmp2 = & a[child]
+
+
+   LDUR X13, [X22, #0]  // a[i]
+   LDUR X14, [X23, #0]  // a[child]
    SUBS X15, X13, X14 // a[i] - a[child]
    
    ADD X0, X19, X21 // a + i
@@ -242,8 +270,20 @@ check_for_swap:
    B loop  // return back to repeat again
 
 end_loop:
+
+    LDUR X23, [SP, #40] // restoring registers
+    LDUR X22, [SP, #32]
+    LDUR X21, [SP, #24]
+    LDUR X20, [SP, #16]
+    LDUR X19, [SP, #8]
+    LDUR LR, [SP, #0]
+    ADDI SP, SP, #48 // Restoring Stack Pointer
+
    BR LR
 
+end_program:
+    DUMP
+    HALT
 
 
 
